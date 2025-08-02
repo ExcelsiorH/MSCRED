@@ -1,0 +1,14 @@
+# Core ML libraries
+torch
+torchvision
+torchaudio
+
+# Numeric and scientific computing
+numpy
+scikit-learn
+pandas
+matplotlib
+h5py
+
+# Utils
+tqdm
