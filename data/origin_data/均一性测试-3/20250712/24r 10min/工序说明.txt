@@ -1,6 +1,0 @@
-1.HTPB+Al+DOS 正车24r/min 10min;
-2.加一半CaCO3 正车24r/min 10min;
-3.加另一半CaCO3 正车24r/min 10min;
-4.加CaSo4 正车24r/min 10min;
-5.反车 24r/min 10min;
-6.正车 24r/min 10min.
