@@ -24,17 +24,17 @@ parser.add_argument('--win_size', type = int, default = [10, 30, 60],
 				   help = 'window size of each segment')
 parser.add_argument('--min_time', type = int, default = 0,
 				   help = 'minimum time point')
-parser.add_argument('--max_time', type = int, default = 20000,
+parser.add_argument('--max_time', type = int, default = 16418,
 				   help = 'maximum time point')
 parser.add_argument('--train_start_point',  type = int, default = 0,
 						help = 'train start point')
-parser.add_argument('--train_end_point',  type = int, default = 8000,
+parser.add_argument('--train_end_point',  type = int, default = 16418,
 						help = 'train end point')
-parser.add_argument('--test_start_point',  type = int, default = 8000,
+parser.add_argument('--test_start_point',  type = int, default = 0,
 						help = 'test start point')
-parser.add_argument('--test_end_point',  type = int, default = 20000,
+parser.add_argument('--test_end_point',  type = int, default = 0,
 						help = 'test end point')
-parser.add_argument('--raw_data_path', type = str, default = './data/synthetic_data_with_anomaly-s-1.csv',
+parser.add_argument('--raw_data_path', type = str, default = './data/train_at91.csv',
 				   help='path to load raw data')
 parser.add_argument('--save_data_path', type = str, default = './data/',
 				   help='path to save data')

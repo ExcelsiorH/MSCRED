@@ -32,7 +32,7 @@ class CnnEncoder(nn.Module):
             nn.SELU()
         )   
         self.conv4 = nn.Sequential(
-            nn.Conv2d(128, 256, 2, (2, 2), 0),
+            nn.Conv2d(128, 256, 2, (2, 2), 1),
             nn.SELU()
         )
     def forward(self, X):
@@ -71,15 +71,15 @@ class CnnDecoder(nn.Module):
     def __init__(self, in_channels):
         super(CnnDecoder, self).__init__()
         self.deconv4 = nn.Sequential(
-            nn.ConvTranspose2d(in_channels, 128, 2, 2, 0, 0),
+            nn.ConvTranspose2d(in_channels, 128, 2, 1, 0, 0),
             nn.SELU()
         )
         self.deconv3 = nn.Sequential(
-            nn.ConvTranspose2d(256, 64, 2, 2, 1, 1),
+            nn.ConvTranspose2d(256, 64, 3, 1, 0, 0),
             nn.SELU()
         )
         self.deconv2 = nn.Sequential(
-            nn.ConvTranspose2d(128, 32, 3, 2, 1, 1),
+            nn.ConvTranspose2d(128, 32, 3, 2, 1, 0),
             nn.SELU()
         )
         self.deconv1 = nn.Sequential(

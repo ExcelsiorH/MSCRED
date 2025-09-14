@@ -51,14 +51,14 @@ if __name__ == '__main__':
     dataLoader = load_data()
     mscred = MSCRED(3, 256)
 
-    # # 训练阶段
-    # # mscred.load_state_dict(torch.load("./checkpoints/model1.pth"))
-    # optimizer = torch.optim.Adam(mscred.parameters(), lr = 0.0002)
-    # train(dataLoader["train"], mscred, optimizer, 10, device)
-    # print("保存模型中....")
-    # torch.save(mscred.state_dict(), "./checkpoints/model2.pth")
+    # 训练阶段
+    # mscred.load_state_dict(torch.load("./checkpoints/model1.pth"))
+    optimizer = torch.optim.Adam(mscred.parameters(), lr = 0.0002)
+    train(dataLoader["train"], mscred, optimizer, 10, device)
+    print("保存模型中....")
+    torch.save(mscred.state_dict(), "./checkpoints/model91.pth")
 
     # # 测试阶段
-    mscred.load_state_dict(torch.load("./checkpoints/model2.pth"))
-    mscred.to(device)
-    test(dataLoader["test"], mscred)
+    # mscred.load_state_dict(torch.load("./checkpoints/model2.pth"))
+    # mscred.to(device)
+    # test(dataLoader["test"], mscred)
