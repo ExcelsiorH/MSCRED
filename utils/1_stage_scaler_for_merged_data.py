@@ -7,12 +7,16 @@ from sklearn.preprocessing import StandardScaler
 # ================= 配置区域 =================
 
 # 输入文件 (上一元生成的带 stage 的文件)
-INPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1121\\0_merged_data_with_stage.csv'
+INPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1122\\0_merged_test_data1.csv'
 
 # 输出目录和文件
 CHECKPOINT_DIR = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\checkpoints'
-OUTPUT_TRAIN_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1121\\0_merged_data_for_train.csv'
+OUTPUT_TRAIN_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1122\\0_merged_data_for_test1.csv'
 SCALER_FILE = os.path.join(CHECKPOINT_DIR, 'stage_wise_scalers.pkl')
+
+# 是否为测试文件 (如果为 True 则加载已保存的 scaler 并对数据做归一化；
+# 如果为 False 则对每个 stage 拟合 scaler 并保存到 SCALER_FILE)
+IS_TEST_FILE = True
 
 # 所有的传感器特征列 (根据之前的脚本确定的列名)
 # 脚本会自动从文件中排除 stage 和 timestamp，这里列出是为了明确特征范围
@@ -45,57 +49,63 @@ def main():
 
     # 3. 分阶段归一化 (Stage-wise Normalization)
     print("\n开始执行分阶段归一化...")
-    
     df_normalized_list = []
-    scalers_dict = {} # 用于保存每个阶段的 scaler
+
+    # 如果是测试文件，先加载已保存的 scalers
+    scalers_dict = {}
+    if IS_TEST_FILE:
+        if not os.path.exists(SCALER_FILE):
+            print(f"错误: 测试模式下找不到 scaler 文件 {SCALER_FILE}，请先在训练模式下生成它。")
+            return
+        print(f"测试模式: 正在加载归一化权重 {SCALER_FILE} ...")
+        scalers_dict = joblib.load(SCALER_FILE)
 
     # 按 stage 分组处理
-    # 假设 stage 是 1 到 8
     grouped = df.groupby('stage')
-    
+
     for stage_id, group_df in grouped:
         stage_id = int(stage_id)
         print(f"  -> 处理阶段 {stage_id} (样本数: {len(group_df)})")
-        
+
         # 提取特征数据
         X = group_df[feature_cols]
-        
-        # 初始化并拟合该阶段的 Scaler
-        scaler = StandardScaler()
-        X_scaled = scaler.fit_transform(X)
-        
-        # 保存 scaler (重要：推理时需要用到)
-        scalers_dict[stage_id] = scaler
-        
+
+        if IS_TEST_FILE:
+            # 测试时使用已保存的 scaler
+            scaler = scalers_dict.get(stage_id)
+            if scaler is None:
+                print(f"  警告: 未找到阶段 {stage_id} 的已保存 scaler，回退为基于该阶段数据拟合新的 scaler。")
+                scaler = StandardScaler()
+                X_scaled = scaler.fit_transform(X)
+            else:
+                X_scaled = scaler.transform(X)
+        else:
+            # 训练/生成 scaler 并保存
+            scaler = StandardScaler()
+            X_scaled = scaler.fit_transform(X)
+            scalers_dict[stage_id] = scaler
+
         # 重构 DataFrame (保持索引不变)
         df_stage_scaled = pd.DataFrame(
-            X_scaled, 
-            columns=feature_cols, 
+            X_scaled,
+            columns=feature_cols,
             index=group_df.index
         )
-        
-        # 把 stage 列加回去，用于下一步编码
+
+        # 把数值 stage 列加回去（保留为数值，而非独热编码）
         df_stage_scaled['stage'] = stage_id
-        
         df_normalized_list.append(df_stage_scaled)
 
     # 合并所有阶段的数据并按时间重新排序
     df_final = pd.concat(df_normalized_list).sort_index()
     
-    # 保存 Scalers 到 checkpoints
-    joblib.dump(scalers_dict, SCALER_FILE)
-    print(f"归一化权重已保存至: {SCALER_FILE}")
+    # 如果不是测试模式，保存 Scalers 到 checkpoints（测试模式下我们只是加载并使用它们）
+    if not IS_TEST_FILE:
+        joblib.dump(scalers_dict, SCALER_FILE)
+        print(f"归一化权重已保存至: {SCALER_FILE}")
 
-    # 4. Stage 编码 (One-Hot Encoding)
-    print("\n正在对 Stage 列进行独热编码 (One-Hot Encoding)...")
-    
-    # 使用 get_dummies 进行编码，前缀设为 stage
-    # columns=['stage'] 会自动移除原始 'stage' 列并替换为 stage_1, stage_2 等
-    df_encoded = pd.get_dummies(df_final, columns=['stage'], prefix='stage')
-    
-    # 强制转换 One-Hot 列为 int (0/1) 而不是 True/False，兼容性更好
-    stage_columns = [col for col in df_encoded.columns if col.startswith('stage_')]
-    df_encoded[stage_columns] = df_encoded[stage_columns].astype(int)
+    # NOTE: 不进行独热编码，最终保留数值型 `stage` 列。
+    df_encoded = df_final  # 名称兼容后续逻辑，实际为已归一化且保留 stage 列的数据框
 
     # 5. 最终检查与保存
     print("\n数据处理完成。")
@@ -108,10 +118,10 @@ def main():
         # 简单填充 (可选)
         # df_encoded = df_encoded.fillna(0)
     
+
     df_encoded.to_csv(OUTPUT_TRAIN_FILE)
-    print(f"训练数据已保存至: {os.path.abspath(OUTPUT_TRAIN_FILE)}")
-    print("-" * 30)
-    print("现在你可以直接将此文件输入模型进行训练了。")
+    print(f"最终数据已保存至: {os.path.abspath(OUTPUT_TRAIN_FILE)}")
+
 
 if __name__ == "__main__":
     main()

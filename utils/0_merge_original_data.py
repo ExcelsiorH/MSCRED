@@ -4,9 +4,9 @@ import os
 
 # ================= 配置区域 =================
 # 输入文件所在的文件夹路径
-INPUT_DIR = '' 
+INPUT_DIR = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1122' 
 # 输出文件名
-OUTPUT_FILE = '0_merged_data_with_stage.csv'
+OUTPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1122\\0_merged_test_data1.csv'
 
 # 时间片段配置
 START_TIME = '2025-11-21 16:39:20'
@@ -18,14 +18,14 @@ RAW_VALUE_COL = 'value'     # 11个基础传感器的数据列名
 
 # 工艺工序时间表
 PROCESS_SCHEDULE = [
-    {"stage_id": 1, "start": "2025/11/21 16:39:20", "duration_min": 10, "desc": "工序1_低速正车"},
-    {"stage_id": 2, "start": "2025/11/21 16:53:20", "duration_min": 15, "desc": "工序2_加盐2/3"},
-    {"stage_id": 3, "start": "2025/11/21 17:12:30", "duration_min": 10, "desc": "工序3_加剩余盐"},
-    {"stage_id": 4, "start": "2025/11/21 18:00:40", "duration_min": 15, "desc": "工序4_中速正车"},
-    {"stage_id": 5, "start": "2025/11/21 18:16:50", "duration_min": 10, "desc": "工序5_低速正车"},
-    {"stage_id": 6, "start": "2025/11/21 18:27:30", "duration_min": 15, "desc": "工序6_中速正车"},
-    {"stage_id": 7, "start": "2025/11/21 18:43:50", "duration_min": 5,  "desc": "工序7_低速反车"},
-    {"stage_id": 8, "start": "2025/11/21 18:49:20", "duration_min": 20, "desc": "工序8_中速正车"}
+    {"stage_id": 1, "start": "2025/11/22 10:19:30", "duration_min": 10, "desc": "工序1_低速正车"},
+    {"stage_id": 2, "start": "2025/11/22 10:36:00", "duration_min": 15, "desc": "工序2_加盐2/3"},
+    {"stage_id": 3, "start": "2025/11/22 11:02:10", "duration_min": 10, "desc": "工序3_加剩余盐"},
+    {"stage_id": 4, "start": "2025/11/22 11:20:00", "duration_min": 15, "desc": "工序4_中速正车"},
+    {"stage_id": 5, "start": "2025/11/22 11:37:00", "duration_min": 10, "desc": "工序5_低速正车"},
+    {"stage_id": 6, "start": "2025/11/22 11:48:20", "duration_min": 15, "desc": "工序6_中速正车"},
+    {"stage_id": 7, "start": "2025/11/22 12:34:30", "duration_min": 5,  "desc": "工序7_低速反车"},
+    {"stage_id": 8, "start": "2025/11/22 12:40:30", "duration_min": 20, "desc": "工序8_中速正车"}
 ]
 # ================= 传感器定义 =================
 
