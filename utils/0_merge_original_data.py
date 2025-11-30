@@ -6,37 +6,33 @@ import os
 # 输入文件所在的文件夹路径
 INPUT_DIR = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1122' 
 # 输出文件名
-OUTPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1122\\0_merged_test_data1.csv'
-
-# 时间片段配置
-START_TIME = '2025-11-21 16:39:20'
-END_TIME = '2025-11-21 19:10:00'
+OUTPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\0_merged_test_data3_1122.csv'
 
 # CSV列名定义
 TIME_COL = 'timestamp'      # 所有文件的时间戳列名
-RAW_VALUE_COL = 'value'     # 11个基础传感器的数据列名
+RAW_VALUE_COL = 'value'     # 12个基础传感器的数据列名
 
 # 工艺工序时间表
 PROCESS_SCHEDULE = [
-    {"stage_id": 1, "start": "2025/11/22 10:19:30", "duration_min": 10, "desc": "工序1_低速正车"},
-    {"stage_id": 2, "start": "2025/11/22 10:36:00", "duration_min": 15, "desc": "工序2_加盐2/3"},
-    {"stage_id": 3, "start": "2025/11/22 11:02:10", "duration_min": 10, "desc": "工序3_加剩余盐"},
-    {"stage_id": 4, "start": "2025/11/22 11:20:00", "duration_min": 15, "desc": "工序4_中速正车"},
-    {"stage_id": 5, "start": "2025/11/22 11:37:00", "duration_min": 10, "desc": "工序5_低速正车"},
-    {"stage_id": 6, "start": "2025/11/22 11:48:20", "duration_min": 15, "desc": "工序6_中速正车"},
-    {"stage_id": 7, "start": "2025/11/22 12:34:30", "duration_min": 5,  "desc": "工序7_低速反车"},
-    {"stage_id": 8, "start": "2025/11/22 12:40:30", "duration_min": 20, "desc": "工序8_中速正车"}
+    {"stage_id": 1, "start": "2025/11/22 17:24:10", "duration_min": 10, "desc": "工序1_低速正车"},
+    {"stage_id": 2, "start": "2025/11/22 18:06:40", "duration_min": 15, "desc": "工序2_加盐2/3"},
+    {"stage_id": 3, "start": "2025/11/22 18:26:35", "duration_min": 10, "desc": "工序3_加剩余盐"},
+    {"stage_id": 4, "start": "2025/11/22 18:39:00", "duration_min": 15, "desc": "工序4_中速正车"},
+    {"stage_id": 5, "start": "2025/11/22 18:56:00", "duration_min": 10, "desc": "工序5_低速正车"},
+    {"stage_id": 6, "start": "2025/11/22 19:07:30", "duration_min": 15, "desc": "工序6_中速正车"},
+    {"stage_id": 7, "start": "2025/11/22 19:23:30", "duration_min": 5,  "desc": "工序7_低速反车"},
+    {"stage_id": 8, "start": "2025/11/22 19:29:10", "duration_min": 20, "desc": "工序8_中速正车"}
 ]
 # ================= 传感器定义 =================
 
-# 1. 11个基础传感器 (直接采样值，需降采样)
+# 1. 12个基础传感器 (直接采样值，需降采样)
 # 列表中的名字既是文件名(不带.csv)，也是合并后的目标列名
 raw_sensors = [
     'flow_rate_inlet', 'flow_rate_outlet', 
     'pressure_inlet', 'pressure_outlet', 
     'rotation_speed', 
     'temp_barrel_bottom', 'temp_barrel_side', 'temp_inlet', 'temp_outlet', 
-    'torque', 'vacuum'
+    'torque', 'vacuum','laser_distance'
 ]
 
 # 2. 噪音传感器 (取 rms 列)
@@ -100,7 +96,7 @@ def load_and_filter_schedule(filename, col_to_extract):
     return df_combined
 
 def process_raw_sensors():
-    print(f"正在处理 11 个基础传感器 (使用 nearest 对齐)...")
+    print(f"正在处理 12 个基础传感器 (使用 nearest 对齐)...")
     processed_data = []
     
     for sensor_name in raw_sensors:
