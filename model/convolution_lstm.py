@@ -2,8 +2,6 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-device = "cuda" if torch.cuda.is_available else "cpu"
-
 class ConvLSTMCell(nn.Module):
     def __init__(self, input_channels, hidden_channels, kernel_size):
         super(ConvLSTMCell, self).__init__()
@@ -13,8 +11,6 @@ class ConvLSTMCell(nn.Module):
         self.input_channels = input_channels
         self.hidden_channels = hidden_channels
         self.kernel_size = kernel_size
-        self.num_features = 4
-
         self.padding = int((kernel_size - 1) / 2)
 
         self.Wxi = nn.Conv2d(self.input_channels, self.hidden_channels, self.kernel_size, 1, self.padding, bias=True)
@@ -31,21 +27,6 @@ class ConvLSTMCell(nn.Module):
         self.Wco = None
 
     def forward(self, x, h, c):
-        # x = x.to(device)
-        # h = h.to(device)
-        # c = c.to(device)
-        # self.Wxi= self.Wxi.to(device)
-        # self.Whi = self.Whi.to(device)
-        # self.Wxf = self.Wxf.to(device)
-        # self.Whf = self.Whf.to(device)
-        # self.Wxc = self.Wxc.to(device)
-        # self.Whc = self.Whc.to(device)
-        # self.Wxo = self.Wxo.to(device)
-        # self.Who = self.Who.to(device)
-        # if self.Wci is not None:
-        #     self.Wci = self.Wci.to(device)
-        #     self.Wcf = self.Wcf.to(device)
-        #     self.Wco = self.Wco.to(device)
         ci = torch.sigmoid(self.Wxi(x) + self.Whi(h) + c * self.Wci)
         cf = torch.sigmoid(self.Wxf(x) + self.Whf(h) + c * self.Wcf)
         cc = cf * c + ci * torch.tanh(self.Wxc(x) + self.Whc(h))
@@ -53,21 +34,19 @@ class ConvLSTMCell(nn.Module):
         ch = co * torch.tanh(cc)
         return ch, cc
 
-    def init_hidden(self, batch_size, hidden, shape):
+    def init_hidden(self, batch_size, hidden, shape, device):
         if self.Wci is None:
-            self.Wci = Variable(torch.zeros(1, hidden, shape[0], shape[1])).to("cpu")
-            self.Wcf = Variable(torch.zeros(1, hidden, shape[0], shape[1])).to("cpu")
-            self.Wco = Variable(torch.zeros(1, hidden, shape[0], shape[1])).to("cpu")
+            self.Wci = Variable(torch.zeros(1, hidden, shape[0], shape[1])).to(device)
+            self.Wcf = Variable(torch.zeros(1, hidden, shape[0], shape[1])).to(device)
+            self.Wco = Variable(torch.zeros(1, hidden, shape[0], shape[1])).to(device)
         else:
             assert shape[0] == self.Wci.size()[2], 'Input Height Mismatched!'
             assert shape[1] == self.Wci.size()[3], 'Input Width Mismatched!'
-        return (Variable(torch.zeros(batch_size, hidden, shape[0], shape[1])).to("cpu"),
-                Variable(torch.zeros(batch_size, hidden, shape[0], shape[1])).to("cpu"))
+        return (Variable(torch.zeros(batch_size, hidden, shape[0], shape[1])).to(device),
+                Variable(torch.zeros(batch_size, hidden, shape[0], shape[1])).to(device))
 
 
 class ConvLSTM(nn.Module):
-    # input_channels corresponds to the first input feature map
-    # hidden state is a list of succeeding lstm layers.
     def __init__(self, input_channels, hidden_channels, kernel_size, step=1, effective_step=[1]):
         super(ConvLSTM, self).__init__()
         self.input_channels = [input_channels] + hidden_channels
@@ -84,41 +63,27 @@ class ConvLSTM(nn.Module):
             self._all_layers.append(cell)
 
     def forward(self, input):
+        # input shape: (Batch, Step, Channel, Height, Width)
         internal_state = []
         outputs = []
         for step in range(self.step):
-            x = input
+            # 获取当前时间步的输入
+            x = input[:, step, :, :, :]
+            
             for i in range(self.num_layers):
-                # all cells are initialized in the first step
                 name = 'cell{}'.format(i)
                 if step == 0:
                     bsize, _, height, width = x.size()
+                    # 传入 x.device 以支持 GPU
                     (h, c) = getattr(self, name).init_hidden(batch_size=bsize, hidden=self.hidden_channels[i],
-                                                             shape=(height, width))
+                                                             shape=(height, width), device=x.device)
                     internal_state.append((h, c))
 
-                # do forward
                 (h, c) = internal_state[i]
                 x, new_c = getattr(self, name)(x, h, c)
                 internal_state[i] = (x, new_c)
-            # only record effective steps
+            
             if step in self.effective_step:
                 outputs.append(x)
 
         return outputs, (x, new_c)
-
-
-if __name__ == '__main__':
-    # gradient check
-    convlstm = ConvLSTM(input_channels=512, hidden_channels=[128, 64, 64, 32, 32], kernel_size=3, step=5,
-                        effective_step=[4]).to("cpu")
-    loss_fn = torch.nn.MSELoss()
-
-    input = Variable(torch.randn(5, 512, 64, 32)).to("cpu")
-    target = Variable(torch.randn(1, 32, 64, 32)).double().to("cpu")
-
-    output = convlstm(input)
-    output = output[0][0].double()
-    print(output.shape)
-    # res = torch.autograd.gradcheck(loss_fn, (output, target), eps=1e-6, raise_exception=True)
-    # print(res)

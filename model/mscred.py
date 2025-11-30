@@ -2,39 +2,50 @@ import torch
 import torch.nn as nn
 import numpy as np
 from model.convolution_lstm import ConvLSTM
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def attention(ConvLstm_out):
     attention_w = []
+    # 假设 step=5
     for k in range(5):
         attention_w.append(torch.sum(torch.mul(ConvLstm_out[k], ConvLstm_out[-1]))/5)
-    m = nn.Softmax()
+    m = nn.Softmax(dim=0)
     attention_w = torch.reshape(m(torch.stack(attention_w)), (-1, 5))
-    cl_out_shape = ConvLstm_out.shape
-    ConvLstm_out = torch.reshape(ConvLstm_out, (5, -1))
-    convLstmOut = torch.matmul(attention_w, ConvLstm_out)
-    convLstmOut = torch.reshape(convLstmOut, (cl_out_shape[1], cl_out_shape[2], cl_out_shape[3]))
+    cl_out_shape = ConvLstm_out[0].shape
+    
+    # Stack output list to tensor: (Step, Batch, C, H, W)
+    ConvLstm_out_tensor = torch.stack(ConvLstm_out) 
+    
+    # Reshape for matmul: (Step, Batch*C*H*W)
+    ConvLstm_out_reshaped = torch.reshape(ConvLstm_out_tensor, (5, -1))
+    
+    # Attention weighting
+    convLstmOut = torch.matmul(attention_w, ConvLstm_out_reshaped)
+    
+    # Reshape back: (Batch, C, H, W)
+    convLstmOut = torch.reshape(convLstmOut, (cl_out_shape[0], cl_out_shape[1], cl_out_shape[2], cl_out_shape[3]))
     return convLstmOut
 
 class CnnEncoder(nn.Module):
     def __init__(self, in_channels_encoder):
         super(CnnEncoder, self).__init__()
+        # Input: (B, C, 15, 15)
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels_encoder, 32, 3, (1, 1), 1),
             nn.SELU()
-        )
+        ) # Out: (B, 32, 15, 15)
         self.conv2 = nn.Sequential(
             nn.Conv2d(32, 64, 3, (2, 2), 1),
             nn.SELU()
-        )    
+        ) # Out: (B, 64, 8, 8)
         self.conv3 = nn.Sequential(
             nn.Conv2d(64, 128, 2, (2, 2), 1),
             nn.SELU()
-        )   
+        ) # Out: (B, 128, 5, 5)
         self.conv4 = nn.Sequential(
             nn.Conv2d(128, 256, 2, (2, 2), 1),
             nn.SELU()
-        )
+        ) # Out: (B, 256, 3, 3)
+
     def forward(self, X):
         conv1_out = self.conv1(X)
         conv2_out = self.conv2(conv1_out)
@@ -47,41 +58,58 @@ class Conv_LSTM(nn.Module):
     def __init__(self):
         super(Conv_LSTM, self).__init__()
         self.conv1_lstm = ConvLSTM(input_channels=32, hidden_channels=[32], 
-                                   kernel_size=3, step=5, effective_step=[4])
+                                   kernel_size=3, step=5, effective_step=[0,1,2,3,4])
         self.conv2_lstm = ConvLSTM(input_channels=64, hidden_channels=[64], 
-                                   kernel_size=3, step=5, effective_step=[4])
+                                   kernel_size=3, step=5, effective_step=[0,1,2,3,4])
         self.conv3_lstm = ConvLSTM(input_channels=128, hidden_channels=[128], 
-                                   kernel_size=3, step=5, effective_step=[4])
+                                   kernel_size=3, step=5, effective_step=[0,1,2,3,4])
         self.conv4_lstm = ConvLSTM(input_channels=256, hidden_channels=[256], 
-                                   kernel_size=3, step=5, effective_step=[4])
+                                   kernel_size=3, step=5, effective_step=[0,1,2,3,4])
 
-    def forward(self, conv1_out, conv2_out, 
-                conv3_out, conv4_out):
-        conv1_lstm_out = self.conv1_lstm(conv1_out)
-        conv1_lstm_out = attention(conv1_lstm_out[0][0])
-        conv2_lstm_out = self.conv2_lstm(conv2_out)
-        conv2_lstm_out = attention(conv2_lstm_out[0][0])
-        conv3_lstm_out = self.conv3_lstm(conv3_out)
-        conv3_lstm_out = attention(conv3_lstm_out[0][0])
-        conv4_lstm_out = self.conv4_lstm(conv4_out)
-        conv4_lstm_out = attention(conv4_lstm_out[0][0])
-        return conv1_lstm_out.unsqueeze(0), conv2_lstm_out.unsqueeze(0), conv3_lstm_out.unsqueeze(0), conv4_lstm_out.unsqueeze(0)
+    def forward(self, conv1_out, conv2_out, conv3_out, conv4_out):
+        conv1_lstm_out, _ = self.conv1_lstm(conv1_out)
+        conv1_lstm_out = attention(conv1_lstm_out)
+        
+        conv2_lstm_out, _ = self.conv2_lstm(conv2_out)
+        conv2_lstm_out = attention(conv2_lstm_out)
+        
+        conv3_lstm_out, _ = self.conv3_lstm(conv3_out)
+        conv3_lstm_out = attention(conv3_lstm_out)
+        
+        conv4_lstm_out, _ = self.conv4_lstm(conv4_out)
+        conv4_lstm_out = attention(conv4_lstm_out)
+        
+        return conv1_lstm_out, conv2_lstm_out, conv3_lstm_out, conv4_lstm_out
 
 class CnnDecoder(nn.Module):
     def __init__(self, in_channels):
         super(CnnDecoder, self).__init__()
+        # Decoder structure modified for 15x15 reconstruction
+        
+        # Input: (B, 256, 3, 3) -> Output: (B, 128, 5, 5)
+        # Formula: (in-1)*s - 2p + k + op
+        # (3-1)*2 - 2*1 + 3 = 4 + 1 = 5
         self.deconv4 = nn.Sequential(
-            nn.ConvTranspose2d(in_channels, 128, 2, 1, 0, 0),
+            nn.ConvTranspose2d(in_channels, 128, 3, 2, 1, 0), 
             nn.SELU()
         )
+        
+        # Input: (B, 128+128, 5, 5) -> Output: (B, 64, 8, 8)
+        # (5-1)*2 - 2*1 + 2 = 8
         self.deconv3 = nn.Sequential(
-            nn.ConvTranspose2d(256, 64, 3, 1, 0, 0),
+            nn.ConvTranspose2d(256, 64, 2, 2, 1, 0),
             nn.SELU()
         )
+        
+        # Input: (B, 64+64, 8, 8) -> Output: (B, 32, 15, 15)
+        # (8-1)*2 - 2*1 + 3 = 14 + 1 = 15
         self.deconv2 = nn.Sequential(
             nn.ConvTranspose2d(128, 32, 3, 2, 1, 0),
             nn.SELU()
         )
+        
+        # Input: (B, 32+32, 15, 15) -> Output: (B, 3, 15, 15)
+        # (15-1)*1 - 2*1 + 3 = 14 + 1 = 15
         self.deconv1 = nn.Sequential(
             nn.ConvTranspose2d(64, 3, 3, 1, 1, 0),
             nn.SELU()
@@ -90,10 +118,13 @@ class CnnDecoder(nn.Module):
     def forward(self, conv1_lstm_out, conv2_lstm_out, conv3_lstm_out, conv4_lstm_out):
         deconv4 = self.deconv4(conv4_lstm_out)
         deconv4_concat = torch.cat((deconv4, conv3_lstm_out), dim = 1)
+        
         deconv3 = self.deconv3(deconv4_concat)
         deconv3_concat = torch.cat((deconv3, conv2_lstm_out), dim = 1)
+        
         deconv2 = self.deconv2(deconv3_concat)
         deconv2_concat = torch.cat((deconv2, conv1_lstm_out), dim = 1)
+        
         deconv1 = self.deconv1(deconv2_concat)
         return deconv1
 
@@ -106,12 +137,22 @@ class MSCRED(nn.Module):
         self.cnn_decoder = CnnDecoder(in_channels_decoder)
     
     def forward(self, x):
-        conv1_out, conv2_out, conv3_out, conv4_out = self.cnn_encoder(x)
+        # x shape: (Batch, Step, C, H, W)
+        # Encoder 需要合并 Batch 和 Step 维度进行并行处理
+        b, step, c, h, w = x.shape
+        x_reshaped = x.view(b * step, c, h, w)
+        
+        conv1_out, conv2_out, conv3_out, conv4_out = self.cnn_encoder(x_reshaped)
+        
+        # 还原维度以供 ConvLSTM 使用: (Batch, Step, C, H, W)
+        conv1_out = conv1_out.view(b, step, conv1_out.shape[1], conv1_out.shape[2], conv1_out.shape[3])
+        conv2_out = conv2_out.view(b, step, conv2_out.shape[1], conv2_out.shape[2], conv2_out.shape[3])
+        conv3_out = conv3_out.view(b, step, conv3_out.shape[1], conv3_out.shape[2], conv3_out.shape[3])
+        conv4_out = conv4_out.view(b, step, conv4_out.shape[1], conv4_out.shape[2], conv4_out.shape[3])
+        
         conv1_lstm_out, conv2_lstm_out, conv3_lstm_out, conv4_lstm_out = self.conv_lstm(
                                 conv1_out, conv2_out, conv3_out, conv4_out)
 
         gen_x = self.cnn_decoder(conv1_lstm_out, conv2_lstm_out, 
                                 conv3_lstm_out, conv4_lstm_out)
         return gen_x
-
-
