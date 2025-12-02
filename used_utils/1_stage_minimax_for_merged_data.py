@@ -10,8 +10,8 @@ from sklearn.preprocessing import MinMaxScaler
 IS_TEST_FILE = True  # 修改这里切换模式
 
 if IS_TEST_FILE:
-    INPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\0_merged_test_data3_1122.csv'   # 你的测试集源文件
-    OUTPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\0_test_data3_stage_minimax_1122.csv'   # 输出的测试文件
+    INPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\0_merged_test_data_1128.csv'   # 你的测试集源文件
+    OUTPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\0_test_data_stage_minimax_1128.csv'   # 输出的测试文件
 else:
     INPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\0_merged_train_data_1121.csv' # 你的训练集源文件
     OUTPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\0_train_data_stage_minimax_1121.csv'   # 输出的训练文件
