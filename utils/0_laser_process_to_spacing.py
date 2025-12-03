@@ -3,8 +3,8 @@ import numpy as np
 from scipy.signal import find_peaks
 
 # 请修改这里的输入和输出文件名
-INPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1128_send\\laser_distance.csv'
-OUTPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1128_send\\laser_spacing.csv'    
+INPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1129\\laser_distance.csv'
+OUTPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1129\\laser_spacing.csv'    
 
 def process_laser_data(file_path, output_path):
     # 1. 读取数据
@@ -108,7 +108,7 @@ def process_laser_data(file_path, output_path):
         # resampled_df['equivalent_spacing'] = resampled_df['equivalent_spacing'].fillna(method='bfill', limit=None)
         resampled_df.loc[:first_valid_index, 'equivalent_spacing'] = first_valid_value
     # 如果需要填充空值（例如保持上一次的值），可以取消下面这行的注释：
-    # resampled_df['equivalent_spacing'] = resampled_df['equivalent_spacing'].ffill()
+    resampled_df['equivalent_spacing'] = resampled_df['equivalent_spacing'].ffill()
 
     #将列名equivalent_spacing改为value
     resampled_df = resampled_df.rename(columns={'equivalent_spacing': 'value'})

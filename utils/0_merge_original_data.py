@@ -4,21 +4,21 @@ import os
 
 # ================= 配置区域 =================
 # 输入文件所在的文件夹路径
-INPUT_DIR = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1128_send' 
+INPUT_DIR = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\origin_data\\1129' 
 # 输出文件名
-OUTPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\test_raw\\0_merged_test_data_1128.csv'
+OUTPUT_FILE = 'C:\\Users\\yusei\\Workspace\\异常检测\\MSCRED\\data\\test_raw\\merged_test_data_1129_gearbox.csv'
 
 
 # 工艺工序时间表
 PROCESS_SCHEDULE = [
-    {"stage_id": 1, "start": "2025/11/28 17:39:22", "duration_min": 10, "desc": "工序1_低速正车"},
-    {"stage_id": 2, "start": "2025/11/28 17:54:30", "duration_min": 15, "desc": "工序2_加盐2/3"},
-    {"stage_id": 3, "start": "2025/11/28 18:13:48", "duration_min": 10, "desc": "工序3_加剩余盐"},
-    {"stage_id": 4, "start": "2025/11/28 18:24:05", "duration_min": 15, "desc": "工序4_中速正车"},
-    {"stage_id": 5, "start": "2025/11/28 18:39:50", "duration_min": 10, "desc": "工序5_低速正车"},
-    {"stage_id": 6, "start": "2025/11/28 18:50:32", "duration_min": 15, "desc": "工序6_中速正车"},
-    {"stage_id": 7, "start": "2025/11/28 19:05:33", "duration_min": 5,  "desc": "工序7_低速反车"},
-    {"stage_id": 8, "start": "2025/11/28 19:11:27", "duration_min": 20, "desc": "工序8_中速正车"}
+    {"stage_id": 1, "start": "2025/11/29 19:17:44", "duration_min": 10, "desc": "工序1_低速正车"},
+    {"stage_id": 2, "start": "2025/11/29 19:47:50", "duration_min": 15, "desc": "工序2_加盐2/3"},
+    {"stage_id": 3, "start": "2025/11/29 20:07:00", "duration_min": 10, "desc": "工序3_加剩余盐"},
+    {"stage_id": 4, "start": "2025/11/29 20:19:40", "duration_min": 15, "desc": "工序4_中速正车"},
+    {"stage_id": 5, "start": "2025/11/29 20:35:30", "duration_min": 10, "desc": "工序5_低速正车"},
+    {"stage_id": 6, "start": "2025/11/29 20:47:00", "duration_min": 15, "desc": "工序6_中速正车"},
+    {"stage_id": 7, "start": "2025/11/29 21:05:00", "duration_min": 5,  "desc": "工序7_低速反车"},
+    {"stage_id": 8, "start": "2025/11/29 21:11:00", "duration_min": 20, "desc": "工序8_中速正车"}
 ]
 # ================= 传感器定义 =================
 

@@ -129,7 +129,7 @@ def process_and_save(file_paths, output_dir, scalers_dict, feature_cols):
         save_path = os.path.join(output_dir, f"processed_{file_name}")
 
         #去整个掉stage列再保存
-        df_processed = df_processed.drop(columns=['stage'])
+        # df_processed = df_processed.drop(columns=['stage'])
 
         df_processed.to_csv(save_path, index=False)
 
